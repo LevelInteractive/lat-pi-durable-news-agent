@@ -1,0 +1,15 @@
+# Build context for deploy/Dockerfile (context = repo root). Keep justfile: the apps find the repo root by it.
+.git
+**/node_modules
+**/dist
+data
+logs
+test-results
+.playwright-cli
+.env
+.env.*
+!.env.example
+dna-network.yaml
+images
+**/*.log
+.DS_Store
