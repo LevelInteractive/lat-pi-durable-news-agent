@@ -46,7 +46,10 @@ test(
   "live hfs ranks the three fixtures as expected",
   { skip: !live && "set JEV_LIVE=1" },
   async () => {
-    const client = new JevClient({ provider: "openrouter" });
+    // JEV_BACKEND=typesafe runs it on TYPESAFE_API_KEY (direct), else OpenRouter.
+    const client = new JevClient({
+      provider: process.env.JEV_BACKEND === "typesafe" ? "typesafe" : "openrouter",
+    });
     const ledger = new JevLedger();
     const cmd = loadCommand("hfs", DIR);
     for (const item of ITEMS) {

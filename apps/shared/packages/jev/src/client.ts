@@ -181,10 +181,12 @@ export class JevClient {
     opts: { model?: string; signal?: AbortSignal } = {},
   ): Promise<SystemOneResult> {
     opts.signal?.throwIfAborted();
-    const requestedModel =
+    const requestedModel = providerModel(
+      this.provider,
       opts.model ??
-      this.model ??
-      (this.provider === "mock" ? this.mock.model : DEFAULT_MODELS[this.provider]);
+        this.model ??
+        (this.provider === "mock" ? this.mock.model : DEFAULT_MODELS[this.provider]),
+    );
     const body: SystemOneRequest = { model: requestedModel, state, questions };
     validateRequest(body);
     let requestText: string;
@@ -270,6 +272,17 @@ export class JevClient {
       clearTimeout(timer);
     }
   }
+}
+
+/**
+ * The same jev model under each provider's name: OpenRouter's ~typesafe/jev-latest is TypeSafe's jev-latest.
+ * Commands pin the OpenRouter name, which TypeSafe direct rejects with a 400.
+ */
+export function providerModel(provider: JevProvider, model: string): string {
+  const prefix = "~typesafe/";
+  if (provider === "typesafe" && model.startsWith(prefix)) return model.slice(prefix.length);
+  if (provider === "openrouter" && /^jev-/.test(model)) return prefix + model;
+  return model;
 }
 
 function selectProvider(explicit?: JevProvider): JevProvider {
