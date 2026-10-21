@@ -7,8 +7,12 @@ import { managedLine, readCrontab } from "../../dna-server-cron/src/crontab.ts";
 import { probe, type Check } from "./net/probe.ts";
 import { searchEngines } from "./print.ts";
 
+// DNA_PROVIDER=anthropic calls Anthropic directly; jev then needs TYPESAFE_API_KEY (or JEV_BACKEND=mock).
+const PROVIDER_KEY =
+  process.env.DNA_PROVIDER === "anthropic" ? "ANTHROPIC_API_KEY" : "OPENROUTER_API_KEY";
 const KEYS = [
-  "OPENROUTER_API_KEY",
+  PROVIDER_KEY,
+  ...(PROVIDER_KEY === "ANTHROPIC_API_KEY" ? ["TYPESAFE_API_KEY"] : []),
   "OPENAI_API_KEY",
   "FIRECRAWL_API_KEY",
   "DNA_CLIENT_TOKEN",

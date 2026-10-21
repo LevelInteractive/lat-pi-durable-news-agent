@@ -2,18 +2,18 @@
 
 A thin, readable layer over pi-durable 1.1.0 for building durable agents.
 
-| Piece                                  | What it gives you                                                                                     |
-| -------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| `openDurableHarness()`                 | A Harness on SQLite (WAL) with retries, live compaction, a PID lock, and no bash or file tools        |
-| `createModelCatalog()`                 | Haiku 5.5 (default) plus the 29 playground models through OpenRouter, or a free faux model            |
-| `compaction.ts`                        | Background and force compaction points (defaults 100k and 200k), shared with UIs                      |
-| `loadPrompt()`                         | Prompts from `prompt_engineering/agents/<agent>/*.md`, strict `{{vars}}`, Definition Of Done enforced |
-| `defineAppTool()`                      | Enum fields checked before validation, so the model gets every valid value and an example call        |
-| `toolError()`, `once()`, `allowOnly()` | Fixable failures, exactly-once effects through task memos, tool allow-lists                           |
-| `spawnSubagents()`                     | Task-owned children run in parallel; replay finds the same children                                   |
-| `observability()`                      | Hooks that report every request, response, tool call and compaction to a sink                         |
-| `startProjector()`                     | Commits to telemetry rows, with the 1.1.0 `durationMs`, `startedAt` and `endedAt`                     |
-| `installScriptedFaux()`                | A rule-scripted faux model for free deterministic tests                                               |
+| Piece                                  | What it gives you                                                                                                                                              |
+| -------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `openDurableHarness()`                 | A Harness on SQLite (WAL) with retries, live compaction, a PID lock, and no bash or file tools                                                                 |
+| `createModelCatalog()`                 | Haiku 5.5 (default) plus the 29 playground models through OpenRouter, the Claude ones direct through Anthropic (`provider: "anthropic"`), or a free faux model |
+| `compaction.ts`                        | Background and force compaction points (defaults 100k and 200k), shared with UIs                                                                               |
+| `loadPrompt()`                         | Prompts from `prompt_engineering/agents/<agent>/*.md`, strict `{{vars}}`, Definition Of Done enforced                                                          |
+| `defineAppTool()`                      | Enum fields checked before validation, so the model gets every valid value and an example call                                                                 |
+| `toolError()`, `once()`, `allowOnly()` | Fixable failures, exactly-once effects through task memos, tool allow-lists                                                                                    |
+| `spawnSubagents()`                     | Task-owned children run in parallel; replay finds the same children                                                                                            |
+| `observability()`                      | Hooks that report every request, response, tool call and compaction to a sink                                                                                  |
+| `startProjector()`                     | Commits to telemetry rows, with the 1.1.0 `durationMs`, `startedAt` and `endedAt`                                                                              |
+| `installScriptedFaux()`                | A rule-scripted faux model for free deterministic tests                                                                                                        |
 
 ## Build a new durable agent
 

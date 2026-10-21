@@ -14,7 +14,7 @@ export interface Config {
   rootDir: string;
   configDir: string;
   promptsDir: string;
-  provider: "openrouter" | "faux";
+  provider: "openrouter" | "anthropic" | "faux";
   jevBackend: "auto" | "fixture" | "mock" | "openrouter" | "typesafe";
   /** auto | web | fallback | firecrawl | fixture; SearchService warns on anything else and searches the web. */
   searchMode: string;
@@ -54,7 +54,10 @@ export function loadConfig(argv = process.argv.slice(2), env = process.env): Con
     strict: false,
   });
   const rootDir = repoRoot();
-  const provider = env.DNA_PROVIDER === "faux" ? "faux" : "openrouter";
+  const provider =
+    env.DNA_PROVIDER === "faux" || env.DNA_PROVIDER === "anthropic"
+      ? env.DNA_PROVIDER
+      : "openrouter";
   const searchMode = env.DNA_SEARCH_MODE?.trim() || "auto";
   const config: Config = {
     device: String(values.device ?? env.DNA_DEVICE_NAME ?? "local"),

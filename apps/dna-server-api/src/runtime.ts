@@ -137,10 +137,24 @@ export async function openApp(config: Config, options: { log?: Logger } = {}): P
   const main = await harness.harness.root(ctx, {
     agent: { model: catalog.defaultModel, thinkingLevel: "low" },
   });
+  // A root saved under another provider (DNA_PROVIDER changed) names a model this catalog cannot run: move it to
+  // the saved catalog model on this provider, else the default.
+  const saved = (await main.agent(ctx)).model;
+  if (saved && saved.provider !== catalog.defaultModel.provider) {
+    let model = catalog.defaultModel;
+    try {
+      const id = store.settings.get<string | undefined>("model", undefined);
+      if (id) model = catalog.ref(id);
+    } catch {}
+    await main.configure({ model }, ctx);
+    log.warn("agent.provider_switched", { from: saved, to: model });
+  }
   const mainModel = async () => {
     const agent = await main.agent(ctx);
-    const id = agent.model?.modelId ?? catalog.defaultModel.modelId;
-    return { id, window: catalog.info(id)?.contextWindow ?? 1_000_000 };
+    const modelId = agent.model?.modelId ?? catalog.defaultModel.modelId;
+    // Report the catalog id: on the anthropic provider the ref's modelId is the Anthropic API id.
+    const info = catalog.list().find((m) => catalog.ref(m.id).modelId === modelId);
+    return { id: info?.id ?? modelId, window: info?.contextWindow ?? 1_000_000 };
   };
   window = (await mainModel()).window;
   harness.harness.resume();

@@ -1,6 +1,8 @@
 // The model catalog: Haiku 5.5 (default) plus 29 more models, all through OpenRouter.
+// DNA_PROVIDER=anthropic keeps the catalog's Anthropic models and calls the Anthropic API directly (ANTHROPIC_API_KEY).
 // DNA_PROVIDER=faux swaps in a free deterministic model with the same 1M window.
 import { createModels, type MutableModels } from "@earendil-works/pi-ai/models";
+import { anthropicProvider } from "@earendil-works/pi-ai/providers/anthropic";
 import { openrouterProvider } from "@earendil-works/pi-ai/providers/openrouter";
 import type { ModelRef } from "@earendil-works/pi-durable";
 
@@ -75,9 +77,21 @@ export const CATALOG: readonly CatalogEntry[] = [
   },
 ];
 
+export type CatalogProvider = "openrouter" | "anthropic" | "faux";
+
+/** The Anthropic API's id for an anthropic/ catalog id: anthropic/claude-haiku-5.5 -> claude-haiku-5-5. */
+export function anthropicModelId(id: string): string {
+  return id.slice("anthropic/".length).replaceAll(".", "-");
+}
+
+/** The catalog models the Anthropic API serves directly, under the same catalog ids. */
+export const ANTHROPIC_CATALOG: readonly CatalogEntry[] = CATALOG.filter((c) =>
+  c.id.startsWith("anthropic/"),
+);
+
 export interface ModelCatalog {
   readonly models: MutableModels;
-  readonly provider: "openrouter" | "faux";
+  readonly provider: CatalogProvider;
   readonly defaultModel: ModelRef;
   list(): ModelInfo[];
   /** A catalog id to a pi-durable model reference; throws for ids outside the catalog. */
@@ -86,7 +100,7 @@ export interface ModelCatalog {
 }
 
 export function createModelCatalog(options: {
-  provider: "openrouter" | "faux";
+  provider: CatalogProvider;
   installFaux?: (models: MutableModels) => void;
   defaultModel?: string;
 }): ModelCatalog {
@@ -119,6 +133,7 @@ export function createModelCatalog(options: {
       info: (id) => all.find((m) => m.id === id),
     };
   }
+  if (options.provider === "anthropic") return anthropicCatalog(models, options.defaultModel);
   const provider = openrouterProvider();
   models.setProvider(provider);
   const known = provider.getModels();
@@ -148,5 +163,42 @@ export function createModelCatalog(options: {
     list,
     ref,
     info: (id) => list().find((m) => m.id === id),
+  };
+}
+
+// Catalog ids stay the OpenRouter-style ids (settings, clients and defaults all use them); a ModelRef carries the
+// Anthropic API id.
+function anthropicCatalog(models: MutableModels, defaultModel?: string): ModelCatalog {
+  const provider = anthropicProvider();
+  models.setProvider(provider);
+  const known = provider.getModels();
+  const missing = ANTHROPIC_CATALOG.filter(
+    (c) => !known.some((m) => m.id === anthropicModelId(c.id)),
+  ).map((c) => c.id);
+  if (missing.length) throw new Error(`Anthropic catalog is missing: ${missing.join(", ")}`);
+  const all: ModelInfo[] = ANTHROPIC_CATALOG.map((c) => {
+    const m = known.find((x) => x.id === anthropicModelId(c.id))!;
+    return {
+      ...c,
+      provider: "anthropic",
+      contextWindow: m.contextWindow,
+      reasoning: m.reasoning,
+      cost: { input: m.cost.input, output: m.cost.output },
+    };
+  });
+  const ref = (id: string): ModelRef => {
+    if (!all.some((m) => m.id === id))
+      throw new Error(
+        `Unknown model ${id}. Pick one of the ${all.length} Anthropic catalog models.`,
+      );
+    return { provider: "anthropic", modelId: anthropicModelId(id) };
+  };
+  return {
+    models,
+    provider: "anthropic",
+    defaultModel: ref(defaultModel ?? DEFAULT_MODEL),
+    list: () => all,
+    ref,
+    info: (id) => all.find((m) => m.id === id),
   };
 }
