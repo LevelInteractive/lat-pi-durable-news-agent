@@ -8,3 +8,8 @@ test-results/
 .DS_Store
 *.log
 .playwright-cli/
+
+# Env files: never commit (same rule as apps/*/.gitignore). Covers .env.dokploy.local,
+# .env.dokploy.production, .env.dokploy.staging, .env.local, …; examples stay tracked.
+.env*
+!.env*.example
